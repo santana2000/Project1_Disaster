@@ -7,9 +7,12 @@
     "build": "vue-cli-service build"
   },
   "dependencies": {
+    "cesium": "^1.71.0",
+    "cesium-navigation-es6": "^1.1.6",
     "core-js": "^3.6.5",
     "echarts": "^4.8.0",
     "element-ui": "^2.13.2",
+    "jquery": "^3.5.1",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0",
     "vuex": "^3.4.0"
@@ -19,8 +22,11 @@
     "@vue/cli-plugin-router": "~4.4.0",
     "@vue/cli-plugin-vuex": "~4.4.0",
     "@vue/cli-service": "~4.4.0",
+    "cesium": "^1.71.0",
+    "cesium-navigation-es6": "^1.1.6",
     "echarts": "^4.8.0",
     "element-ui": "^2.13.2",
+    "jquery": "^3.5.1",
     "vue-template-compiler": "^2.6.11"
   }
 }

@@ -17,9 +17,14 @@
 			</el-select>
 		</div>
 		<div class="menu">
-			<el-button type="primary" plain >主要按钮</el-button>
-			<el-button type="primary" plain>主要按钮</el-button>
-			<el-button type="primary" plain>主要按钮</el-button>
+			<el-button type="primary" plain @click="getMyPosition">位置查询  </el-button>
+			<!-- <el-button type="primary" plain	@click="getMyDistance">距离测量</el-button> -->
+			<!-- <el-button type="primary" plain @click="getHotMap">热力图  </el-button> -->
+			<!-- <el-button type="primary" plain @click="getMapPhoto">专题图  </el-button> -->
+
+		</div>
+		<div id="poi">
+			经纬度
 		</div>
 	</div>
 </template>
@@ -27,6 +32,8 @@
 <script>
 // @ is an alias to /src
 import HelloWorld from "@/components/HelloWorld.vue";
+import CesiumNavigation from "cesium-navigation-es6";
+
 
 export default {
 	name: "Home",
@@ -55,16 +62,16 @@ export default {
 			
 			var cesiumContainer = document.getElementById("cesiumContainer");
 			window.viewer= new Cesium.Viewer("cesiumContainer",{
-				animation : false,//是否创建动画小器件，左下角仪表
-				baseLayerPicker : false,//是否显示图层选择器
-				fullscreenButton : false,//是否显示全屏按钮
-				geocoder : false,//是否显示geocoder小器件，右上角查询按钮
-				homeButton : false,//是否显示Home按钮
-				infoBox : false,//是否显示信息框
-				sceneModePicker : false,//是否显示3D/2D选择器
-				selectionIndicator : false,//是否显示选取指示器组件
-				timeline : false,//是否显示时间轴
-				navigationHelpButton : false,//是否显示右上角的帮助按钮
+				animation : false,				//是否创建动画小器件，左下角仪表
+				baseLayerPicker : false,		//是否显示图层选择器
+				fullscreenButton : false,		//是否显示全屏按钮
+				geocoder : false,				//是否显示geocoder小器件，右上角查询按钮
+				homeButton : false,				//是否显示Home按钮
+				infoBox : false,				//是否显示信息框
+				sceneModePicker : false,		//是否显示3D/2D选择器
+				selectionIndicator : false, 	//是否显示选取指示器组件
+				timeline : false,				//是否显示时间轴
+				navigationHelpButton : false,	//是否显示右上角的帮助按钮
 				CreditsDisplay: false,
 				contextOptions: {
 					webgl:{
@@ -81,8 +88,11 @@ export default {
 			});
 			viewer._cesiumWidget._creditContainer.style.display="none";
     		viewer.scene.debugShowFramesPerSecond = true; //显示帧率
+			window.canvas = viewer.canvas;
+			window.camera = viewer.scene.camera;
 
-			// window.viewer = viewer;
+			var navOptions = {};
+			CesiumNavigation(viewer, navOptions);
 
 			window.vecLayer = new Cesium.WebMapTileServiceImageryProvider({
 				url: "http://t0.tianditu.com/vec_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=vec&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=ebf64362215c081f8317203220f133eb",
@@ -142,7 +152,24 @@ export default {
 			}
 		},
 		getMapPhoto(){
-			console.log(map);
+			console.log('aa');
+		},
+		getMyPosition(){
+			var vhandler = new Cesium.ScreenSpaceEventHandler(canvas);
+			vhandler.setInputAction(function(event){
+				var myEarthPosition = viewer.camera.pickEllipsoid(event.position,viewer.scene.globe.ellipsoid)
+				console.log(myEarthPosition); //Cartesian3格式
+				var cartographic = Cesium.Cartographic.fromCartesian(myEarthPosition, viewer.scene.globe.ellipsoid, new Cesium.Cartographic());
+				var lat = Cesium.Math.toDegrees(cartographic.latitude).toFixed(2);
+				var lng = Cesium.Math.toDegrees(cartographic.longitude).toFixed(2);
+				var height=(viewer.camera.positionCartographic.height/1000).toFixed(2); 
+
+			},Cesium.ScreenSpaceEventType.LEFT_CLICK);
+			vhandler.setInputAction(function(event) {
+            vhandler = vhandler.destroy();
+            	// $("#infoboxx").hide();
+        	}, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+		
 		}
 	},
 };

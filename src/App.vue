@@ -33,6 +33,6 @@
 }
 .cesium-performanceDisplay-defaultContainer{
   right: 20px;
-  top: 100px;
+  top: 650px;
 }
 </style>
