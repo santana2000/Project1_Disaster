@@ -6,11 +6,12 @@ const debug = process.env.NODE_ENV !== 'production'
 // let cesiumSource = './node_modules/cesium/Source'
 // let cesiumWorkers = '../Build/Cesium/Workers'
 module.exports = {
-    publicPath: './',
+    // publicPath: process.env.NODE_ENV === 'production' ? '/disaster/' : '/',
+    publicPath: './',    //这个值在开发环境下同样生效！！！
     devServer: {
-        port: 8090 //修改服务端口号
+        port: 8099 //修改服务端口号
     },
-    outputDir: 'dist', //设置 build 输出目录
+    outputDir: 'disaster', //设置 build 输出目录
     configureWebpack: {
         output: {
             sourcePrefix: ' '

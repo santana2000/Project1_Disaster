@@ -26,6 +26,7 @@
     "cesium-navigation-es6": "^1.1.6",
     "echarts": "^4.8.0",
     "element-ui": "^2.13.2",
+    "html2canvas": "^1.0.0-rc.5",
     "jquery": "^3.5.1",
     "vue-template-compiler": "^2.6.11"
   }

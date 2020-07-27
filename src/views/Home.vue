@@ -1,10 +1,9 @@
 <template>
-	<div class="home">
+	<div class="home" ref="home">
 		<!-- <HelloWorld msg="Welcome to Your Vue.js App" /> -->
-		
-		<div id="cesiumContainer">
-			
-			
+		<!-- 右边添加一排竖直方向的iconfont -->
+
+		<div id="cesiumContainer" ref="getMap">
 		</div>
 
 		<div id="changeMap">
@@ -20,11 +19,15 @@
 			<el-button type="primary" plain @click="getMyPosition">位置查询  </el-button>
 			<!-- <el-button type="primary" plain	@click="getMyDistance">距离测量</el-button> -->
 			<!-- <el-button type="primary" plain @click="getHotMap">热力图  </el-button> -->
-			<!-- <el-button type="primary" plain @click="getMapPhoto">专题图  </el-button> -->
+			<el-button type="primary" plain @click="getMapPhoto">专题图  </el-button>
+			<el-button type="primary" plain @click="addModel">模型  </el-button>
 
 		</div>
 		<div id="poi">
 			经纬度
+		</div>
+		<div id="putMap">
+
 		</div>
 	</div>
 </template>
@@ -33,7 +36,7 @@
 // @ is an alias to /src
 import HelloWorld from "@/components/HelloWorld.vue";
 import CesiumNavigation from "cesium-navigation-es6";
-
+import html2canvas from 'html2canvas'; 
 
 export default {
 	name: "Home",
@@ -88,7 +91,7 @@ export default {
 			});
 			viewer._cesiumWidget._creditContainer.style.display="none";
     		viewer.scene.debugShowFramesPerSecond = true; //显示帧率
-			window.canvas = viewer.canvas;
+			window.myCanvas = viewer.canvas;
 			window.camera = viewer.scene.camera;
 
 			var navOptions = {};
@@ -152,10 +155,24 @@ export default {
 			}
 		},
 		getMapPhoto(){
+			const opts = {
+				useCORS:true,
+			};
 			console.log('aa');
+			html2canvas(this.$refs.getMap,opts).then(canvas =>{
+				// $("#putMap").append(canvas)
+				// let link = document.createElement("a");
+				// link.href = canvas.toDataURL();//下载链接
+				// // ink.href = ximg.src;//下载链接
+				// link.setAttribute("download","专题图.png");
+				// link.style.display = "none";//a标签隐藏
+				// document.body.appendChild(link);
+				// link.click();
+			});
+
 		},
 		getMyPosition(){
-			var vhandler = new Cesium.ScreenSpaceEventHandler(canvas);
+			var vhandler = new Cesium.ScreenSpaceEventHandler(myCanvas);
 			vhandler.setInputAction(function(event){
 				var myEarthPosition = viewer.camera.pickEllipsoid(event.position,viewer.scene.globe.ellipsoid)
 				console.log(myEarthPosition); //Cartesian3格式
@@ -168,9 +185,33 @@ export default {
 			vhandler.setInputAction(function(event) {
             vhandler = vhandler.destroy();
             	// $("#infoboxx").hide();
-        	}, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
-		
-		}
+			}, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+		},
+		addModel(){
+			viewer.entities.add({
+				// 和时间轴关联
+				id: "tower2",
+				position: new Cesium.Cartesian3.fromDegrees(114.51, 9.92, 60000),
+				// 模型数据
+				model: {
+				uri: "models/FeiTing.glb",
+				minimumPixelSize: 188
+				// scale: 1
+				}
+			});
+			// zoomT
+			viewer.entities.add({
+				// 和时间轴关联
+				id: "tower3",
+				position: new Cesium.Cartesian3.fromDegrees(118.51, 9.92, 60000),
+				// 模型数据
+				model: {
+				uri: "models/FeiTing.glb",
+				minimumPixelSize: 188
+				// scale: 1
+				}
+			});
+		},
 	},
 };
 </script>
@@ -210,6 +251,13 @@ export default {
 		width: 140px;
 
 		/* color: black; */
+	}
+	#putMap{
+		z-index: 50;
+		position: absolute;
+		left: 20px;
+		bottom: 20px;
+		border: coral 3px solid;
 	}
 
 </style>

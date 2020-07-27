@@ -10,7 +10,7 @@ import $ from 'jquery';
 
 import echarts from 'echarts'
 
-Vue.config.productionTip = true;
+Vue.config.productionTip = false;
 
 Vue.use(ElementUI);
 Vue.prototype.$echarts = echarts;
