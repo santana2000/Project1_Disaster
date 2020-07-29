@@ -21,6 +21,7 @@
   padding: 30px;
   background-color: rgb(211, 211, 211);
   margin-bottom: 10px;
+  /* height: 120px; */
 }
 
 #nav a {
