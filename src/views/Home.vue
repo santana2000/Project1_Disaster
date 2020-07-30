@@ -17,19 +17,25 @@
 		</div>
 		<div class="menu">
 			<el-button type="primary" plain @click="getMyPosition">位置查询  </el-button>
-			<!-- <el-button type="primary" plain	@click="getMyDistance">距离测量</el-button> -->
+			<el-button type="primary" plain	@click="getMyDistance">距离测量</el-button>
 			<!-- <el-button type="primary" plain @click="getHotMap">热力图  </el-button> -->
 			<el-button type="primary" plain @click="getMapPhoto">专题图  </el-button>
-			<!-- <el-button type="primary" plain @click="addModel">模型  </el-button> -->
 			<el-button type="primary" plain @click="addPOI">POI点 </el-button>
+			<!-- <el-button type="primary" plain @click="addModel">模型-打包测试</el-button> -->
+
 
 		</div>
-		<div id="poi">
-			经纬度
+        <!-- 经纬度信息显示 -->
+		<div id="nowpoi">
+			
 		</div>
 		<!-- <div id="putMap">
-
 		</div> -->
+        
+        <!-- 测量信息显示 -->
+        <div id="toolTip">
+
+        </div>
 	</div>
 </template>
 
@@ -42,6 +48,8 @@ import html2canvas from 'html2canvas';
 
 import RegisterCoordinateSystem from "../js/RegisterCoordinateSystem";
 import "../js/EchartsLayer.js";
+import { getLineDis, sum } from "../js/MyTools.js";
+
 
 export default {
 	name: "Home",
@@ -65,9 +73,9 @@ export default {
 		this.initMap();
 	},
 	methods:{
+        //初始化地图
 		initMap(){
         	Cesium.Ion.defaultAccessToken ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTA3YWQ1MC04NGEwLTRiNGItYjlmMC03YmYyYjU2NWY5OTEiLCJpZCI6OTEwMywic2NvcGVzIjpbImFzbCIsImFzciIsImFzdyIsImdjIiwicHIiXSwiaWF0IjoxNTk0MTExNjM0fQ.yUm357eFGBOmUhDba64eAsSpXrYNpRg7cCpwzyz5FjE';
-			
 			var cesiumContainer = document.getElementById("cesiumContainer");
 			window.viewer= new Cesium.Viewer("cesiumContainer",{
 				animation : false,				//是否创建动画小器件，左下角仪表
@@ -95,10 +103,10 @@ export default {
 				},
 			});
 			viewer._cesiumWidget._creditContainer.style.display="none";
-    		viewer.scene.debugShowFramesPerSecond = true; //显示帧率
+    		// viewer.scene.debugShowFramesPerSecond = true; //显示帧率
 			window.myCanvas = viewer.canvas;
-			window.camera = viewer.scene.camera;
-
+            window.camera = viewer.scene.camera;
+            //指南针
 			var navOptions = {};
 			CesiumNavigation(viewer, navOptions);
 
@@ -132,9 +140,19 @@ export default {
 				show: true,
 				maximumLevel: 18
 			}); //天地图影像底图
-			console.log("init");
+            console.log("init");
+            //地图位置
+			viewer.scene.camera.setView({
+                destination: Cesium.Cartesian3.fromDegrees( 116.3, 39.9, 10000000 ),
+                // orientation:{
+                //     heading : Cesium.Math.toRadians( 0 ),
+                //     pitch : Cesium.Math.toRadians( -90 ),
+                //     roll : Cesium.Math.toRadians( 0 )
+                // }
+			})
 
-		},
+        },
+        //转换底图---------------------------------------------------------------------------
 		changeBaseMap(item){
 			console.log(item);
 		
@@ -158,7 +176,8 @@ export default {
 			}else {
 
 			}
-		},
+        },
+        //屏幕截图---------------------------------------------------------------------------
 		getMapPhoto(){
 			const opts = {
 				useCORS:true,
@@ -175,23 +194,226 @@ export default {
 				link.click();
 			});
 
-		},
+        },
+        //获取经纬度位置----------------------------------------------------------------------
 		getMyPosition(){
-			var vhandler = new Cesium.ScreenSpaceEventHandler(myCanvas);
+            var vhandler = new Cesium.ScreenSpaceEventHandler(myCanvas);
+            //左键单击开始
 			vhandler.setInputAction(function(event){
 				var myEarthPosition = viewer.camera.pickEllipsoid(event.position,viewer.scene.globe.ellipsoid)
 				console.log(myEarthPosition); //Cartesian3格式
 				var cartographic = Cesium.Cartographic.fromCartesian(myEarthPosition, viewer.scene.globe.ellipsoid, new Cesium.Cartographic());
 				var lat = Cesium.Math.toDegrees(cartographic.latitude).toFixed(2);
 				var lng = Cesium.Math.toDegrees(cartographic.longitude).toFixed(2);
-				var height=(viewer.camera.positionCartographic.height/1000).toFixed(2); 
+                var height=(viewer.camera.positionCartographic.height/1000).toFixed(2); 
+                // 创建气泡窗体
+                var info = `经度：${lng}</br>纬度：${lat}</br>高度：${height}`;
+                $("#nowpoi").empty();
+                $("#nowpoi").append(info);
+                $("#nowpoi").show();
+                // 气泡位置
+                var winpos = viewer.scene.cartesianToCanvasCoordinates(
+                    myEarthPosition    //屏幕坐标
+                ); 
+                console.log("winpos:" + winpos);
+                var bubble = document.getElementById("nowpoi");
+                bubble.style.left = winpos.x + 15 + "px";
+                bubble.style.top = winpos.y - 5 + "px";
 
-			},Cesium.ScreenSpaceEventType.LEFT_CLICK);
+                //位置跟随
+                viewer.scene.postRender.addEventListener(function (e) {
+                    // var newpoi = Cesium.SceneTransforms.wgs84ToWindowCoordinates(
+                    //     viewer.scene,
+                    //     myEarthPosition
+                    // );
+                    var newpoi = viewer.scene.cartesianToCanvasCoordinates(myEarthPosition); //屏幕坐标
+                    // console.log("newpoi"+ newpoi);
+                    if (winpos.x != newpoi.x) {
+                        winpos.x = newpoi.x;
+                        winpos.y = newpoi.y;
+                        var bubble = document.getElementById("nowpoi");
+                        bubble.style.left = winpos.x + 15 + "px";
+                        bubble.style.top = winpos.y - 5 + "px";
+                    }
+                });
+
+            },Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            //右键单击结束
 			vhandler.setInputAction(function(event) {
             vhandler = vhandler.destroy();
             	// $("#infoboxx").hide();
 			}, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
-		},
+        },
+        //距离测量函数------------------------------------------------------------------------
+		getMyDistance(){
+            var AllEnities = [];
+            var isDraw = false;
+            var polyline = new Cesium.Entity();
+            var polylinePath = [];  //点集合
+            var tooltip = document.getElementById("toolTip");
+            var LineEntities = [];//所有折线对象
+            var disNums = []; //线路长度之和
+            var StartPoint;
+            var temLine = null;
+			var myhandler = new Cesium.ScreenSpaceEventHandler(myCanvas);
+			myhandler.setInputAction(function(movement){
+                // console.log(movement.endPosition); //屏幕坐标
+                var cartographic;
+                    var ray = camera.getPickRay(movement.endPosition); //射线发出位置origin 与射线方向 direction
+                if(ray){
+				    var position1 = viewer.scene.globe.pick(ray, viewer.scene); //cartisian3坐标
+                }
+                // cartographic = Cesium.Ellipsoid.WGS84.cartesianToCartographic(position1);
+                cartographic = Cesium.Cartographic.fromCartesian(position1, viewer.scene.globe.ellipsoid, new Cesium.Cartographic());
+                if (cartographic) {
+                    var height = viewer.scene.globe.getHeight(cartographic);
+                    var point = Cesium.Cartesian3.fromDegrees(cartographic.longitude / Math.PI * 180, cartographic.latitude / Math.PI * 180, height);
+                    if (isDraw) {
+                        tooltip.style.left = movement.endPosition.x + 10 + "px";
+                        tooltip.style.top = movement.endPosition.y + 20 + "px";
+                        tooltip.style.display = "block";
+                        if (polylinePath.length < 1) {
+                            return;
+                        }
+                        if (temLine != null) //清除临时线
+                        {
+                            viewer.entities.remove(temLine);
+                        }
+                        if (polylinePath.length == 1 && point.x != null) {
+ 
+                            temLine = viewer.entities.add({
+                                polyline: {
+                                    show: true,
+                                    positions: [polylinePath[0], point],
+                                    material: new Cesium.PolylineOutlineMaterialProperty({
+                                        color: Cesium.Color.RED
+                                    }),
+                                    width: 2
+                                }
+                            });
+ 
+                            AllEnities.push(temLine);
+                            var distance = sum(disNums) + Number(getLineDis(polylinePath[0], point));//自己实现
+                            tooltip.innerHTML = '<p>长度：' + distance.toFixed(2) + '公里</p><p>双击确定终点</p>';
+ 
+                        }
+                    }
+                }
+            },Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            //左键单击
+            myhandler.setInputAction(function (event) {
+                isDraw = true;
+                var position1;
+                var cartographic;
+                var ray = viewer.scene.camera.getPickRay(event.position);
+                if (ray)
+                    position1 = viewer.scene.globe.pick(ray, viewer.scene);
+                    console.log('左键单击----------------------------------------------------------');
+                    console.log(position1);
+                if (position1)
+                    // cartographic = Cesium.Cartographic.fromCartesian(position1);
+                    cartographic = Cesium.Ellipsoid.WGS84.cartesianToCartographic(position1);
+                    console.log(position1);
+                if (cartographic) {
+                    var height = viewer.scene.globe.getHeight(cartographic);
+                    var point = Cesium.Cartesian3.fromDegrees(cartographic.longitude / Math.PI * 180, cartographic.latitude / Math.PI * 180, height);
+ 
+                    polylinePath.push(point); //加点
+
+                    if (isDraw && polylinePath.length == 1) {
+                        StartPoint = point;
+                        var strartpoint = viewer.entities.add(
+                         {
+                             position: point,
+                             point: {
+                                 heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                                 show: true,
+                                 color: Cesium.Color.SKYBLUE,
+                                 pixelSize: 3,
+                                 outlineColor: Cesium.Color.YELLOW,
+                                 outlineWidth: 1
+                             },
+                             label: {
+                                 text: "起点",
+                                 font: '14pt monospace',
+                                 color: Cesium.Color.RED,
+                                 backgroundColor: Cesium.Color.CORAL,
+                                 style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                                 outlineWidth: 2,
+                                 //垂直位置
+                                 heightReference: Cesium.HeightReference.NONE,
+                                 verticalOrigin: Cesium.VerticalOrigin.TOP,
+                                 pixelOffset: new Cesium.Cartesian2(50, 0)
+                             }
+                         }
+                     );
+                        AllEnities.push(strartpoint);
+                    }
+ 
+                    if (isDraw && polylinePath.length > 1) {
+                        var text = 0;
+                        text = sum(disNums) + Number(getLineDis(polylinePath[0], polylinePath[1]));
+                        disNums.push(getLineDis(polylinePath[0], polylinePath[1]));
+                        var temppoint = viewer.entities.add(
+                            {
+                                  position: point,
+                                  point: {
+                                      heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                                      show: true,
+                                      color: Cesium.Color.SKYBLUE,
+                                      pixelSize: 3,
+                                      outlineColor: Cesium.Color.YELLOW,
+                                      outlineWidth: 1
+                                  },
+                                  label: {
+                                      text: text.toFixed(2).toString() + '公里',
+                                      font: '14pt monospace',
+                                      color: Cesium.Color.RED,
+                                      backgroundColor: Cesium.Color.CORAL,
+                                      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                                      outlineWidth: 2,
+                                      //垂直位置
+                                      heightReference: Cesium.HeightReference.NONE,
+                                      verticalOrigin: Cesium.VerticalOrigin.TOP,
+                                      pixelOffset: new Cesium.Cartesian2(50, 0)
+                                  }
+                            }
+                        );
+                        AllEnities.push(temppoint);
+ 
+                        polyline = viewer.entities.add({
+                            polyline: {
+                                show: true,
+                                positions: polylinePath,
+                                material: new Cesium.PolylineOutlineMaterialProperty({
+                                    color: Cesium.Color.RED
+                                }),
+                                width: 2
+                            }
+                        });
+                        AllEnities.push(polyline);
+                        LineEntities.push(polyline); //加直线
+                        var lastpoint = polylinePath[polylinePath.length - 1];
+                        polylinePath = [lastpoint]; //只有两个点
+                    }
+                }
+            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            //右键单击
+            myhandler.setInputAction(function () {
+                viewer.entities.remove(temLine);
+                myhandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+                myhandler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+                AllEnities.push(polyline);
+                viewer.trackedEntity = undefined;
+                isDraw = false;
+                tooltip.style.display = "none";
+                polylinePath = [];
+                //LineEntities = [];
+                // polyline = null;
+ 
+            }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+        },
+        //添加模型 暂时不用，7月29
 		addModel(){
 			viewer.entities.add({
 				// 和时间轴关联
@@ -216,7 +438,8 @@ export default {
 				// scale: 1
 				}
 			});
-		},
+        },
+        //POI点可视化-------------------------------------------------------------------------
 		addPOI(){
 			var dataPoi = [
                 {name: '海门', value: 9},
@@ -686,7 +909,8 @@ export default {
                 ]
             };
             new Cesium.EchartsLayer(viewer, option)
-		}
+		},
+
 	},
 };
 </script>
@@ -727,6 +951,19 @@ export default {
 
 		/* color: black; */
 	}
+    #nowpoi{
+        position: absolute;
+        width: 150px;
+        height: 75px;
+        z-index: 99;
+        background-color: rgba(100, 148, 237, 0.76);
+        border: dodgerblue 1px solid;
+        border-radius: 10px;
+        color: rgb(255, 254, 254);
+        display: none;
+        text-align: center;
+        font-size: 18px;
+    }
 	#putMap{
 		z-index: 50;
 		position: absolute;

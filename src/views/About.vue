@@ -49,7 +49,7 @@
         </div>
 
         <div id="mytransfer">
-            <el-transfer v-model="value" :data="data"></el-transfer>
+            <el-transfer v-model="value" :data="data"> </el-transfer>
         </div>
 
 
