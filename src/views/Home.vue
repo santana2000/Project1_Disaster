@@ -22,6 +22,7 @@
 			<el-button type="primary" plain @click="getMapPhoto">专题图  </el-button>
 			<el-button type="primary" plain @click="addPOI">POI点 </el-button>
 			<!-- <el-button type="primary" plain @click="addModel">模型-打包测试</el-button> -->
+			<el-button type="primary" plain @click="mapMore">地图聚类</el-button>
 
 
 		</div>
@@ -48,7 +49,7 @@ import html2canvas from 'html2canvas';
 
 import RegisterCoordinateSystem from "../js/RegisterCoordinateSystem";
 import "../js/EchartsLayer.js";
-import { getLineDis, sum } from "../js/MyTools.js";
+import { getLineDis, sum, showDetails } from "../js/MyTools.js";
 
 
 export default {
@@ -909,7 +910,11 @@ export default {
                 ]
             };
             new Cesium.EchartsLayer(viewer, option)
-		},
+        },
+        //地图聚类---------------------------------------------------------------------------
+        mapMore(){
+            showDetails();
+        }
 
 	},
 };
