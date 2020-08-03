@@ -50,7 +50,12 @@
 
         <div id="mytransfer">
             <el-transfer v-model="value" :data="data"> </el-transfer>
+            
         </div>
+
+        <!-- axios测试 -->
+        <el-button type="primary" plain @click="getMyAxios" >请求数据</el-button>
+
 
 
     </div>
@@ -104,7 +109,27 @@ export default {
             $(".el-checkbox__input")[1].after("<b>hello</b>")
             $(".el-checkbox__input").get(1).after("<b>hello</b>")
             console.log(this.elecolor);
+        },
+        getMyAxios(){
+            this.$axios.get("https://api.coindesk.com/v1/bpi/currentprice.json")
+                .then(res => {
+                        console.log(res.data.time);
+                        console.log('a');
+                }
+            ); 
+            //写法二
+            // this.$axios.request({
+            //     // url:"https://easy-mock.com/mock/5b2240e2fcfce63e92dc3dbf/lianxi/lianxi",
+            //     method:"GET"
+            // }).then(res => {
+            //         if(res.data.status === 0){
+            //             console.log(res.data);
+            //         }
+            //     }
+            // ); 
         }
+
+    //methods结束-------------------------------------------------------------------------------
     },
 };
 </script>

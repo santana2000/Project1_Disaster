@@ -22,7 +22,7 @@
 			<el-button type="primary" plain @click="getMapPhoto">专题图  </el-button>
 			<el-button type="primary" plain @click="addPOI">POI点 </el-button>
 			<!-- <el-button type="primary" plain @click="addModel">模型-打包测试</el-button> -->
-			<el-button type="primary" plain @click="mapMore">地图聚类</el-button>
+			<!-- <el-button type="primary" plain @click="mapMore">地图聚类测试</el-button> -->
 
 
 		</div>

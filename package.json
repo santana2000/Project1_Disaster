@@ -22,6 +22,7 @@
     "@vue/cli-plugin-router": "~4.4.0",
     "@vue/cli-plugin-vuex": "~4.4.0",
     "@vue/cli-service": "~4.4.0",
+    "axios": "^0.19.2",
     "cesium": "^1.71.0",
     "cesium-navigation-es6": "^1.1.6",
     "echarts": "^4.8.0",
